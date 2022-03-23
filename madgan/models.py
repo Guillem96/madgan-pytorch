@@ -1,5 +1,20 @@
+from pathlib import Path
+from typing import Optional, Protocol, Union
+
 import torch
 import torch.nn as nn
+
+
+class SerializableModule(Protocol):
+
+    def save(self, fpath: Union[str, Path]) -> None:
+        ...
+
+    @classmethod
+    def from_pretrained(
+            cls, fpath: Union[str, Path],
+            map_location: Optional[torch.device]) -> "SerializableModule":
+        ...
 
 
 class Generator(nn.Module):
@@ -29,6 +44,29 @@ class Generator(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         rnn_output, _ = self.lstm(x)
         return self.linear(rnn_output)
+
+    def save(self, fpath: Union[Path, str]) -> None:
+        chkp = {
+            "config": {
+                "latent_space_dim": self.latent_space_dim,
+                "hidden_units": self.hidden_units,
+                "n_lstm_layers": self.n_lstm_layers,
+                "output_dim": self.output_dim
+            },
+            "weights": self.state_dict(),
+        }
+        torch.save(chkp, fpath)
+
+    @classmethod
+    def from_pretrained(
+            cls,
+            fpath: Union[Path, str],
+            map_location: Optional[torch.device] = None) -> "Generator":
+        chkp = torch.load(fpath, map_location=map_location)
+        model = cls(**chkp.pop("config"))
+        model.load_state_dict(chkp.pop("weights"))
+        model.eval()
+        return model
 
 
 class Discriminator(nn.Module):
@@ -66,3 +104,26 @@ class Discriminator(nn.Module):
 
         rnn_output, _ = self.lstm(x)
         return self.activation(self.linear(rnn_output))
+
+    def save(self, fpath: Union[Path, str]) -> None:
+        chkp = {
+            "config": {
+                "add_batch_mean": self.add_batch_mean,
+                "hidden_units": self.hidden_units,
+                "input_dim": self.input_dim,
+                "n_lstm_layers": self.n_lstm_layers
+            },
+            "weights": self.state_dict(),
+        }
+        torch.save(chkp, fpath)
+
+    @classmethod
+    def from_pretrained(
+            cls,
+            fpath: Union[Path, str],
+            map_location: Optional[torch.device] = None) -> "Discriminator":
+        chkp = torch.load(fpath, map_location=map_location)
+        model = cls(**chkp.pop("config"))
+        model.load_state_dict(chkp.pop("weights"))
+        model.eval()
+        return model

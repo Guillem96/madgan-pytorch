@@ -1,9 +1,9 @@
+import random
 from typing import Callable, Dict, Iterator
 
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-import random
 
 LossFn = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 
@@ -81,7 +81,7 @@ def train_one_epoch(generator: nn.Module,
         discriminator.eval()
 
         g_logits = discriminator(fake)
-        # Genrator will improve so it can cheat the discriminator
+        # Generator will improve so it can cheat the discriminator
         cheat_loss = loss_fn(g_logits, real_labels)
         cheat_loss.backward()
         generator_optimizer.step()
@@ -137,7 +137,7 @@ def evaluate(generator: nn.Module,
             (real or non-anomaly). Defaults to 0.
         anomaly_label (int): Label that identifies generate samples 
             (anomalies when running inference). Defaults to 1.
-    
+
     Returns:
         Dict[str, float]: Aggregated metrics.
     """

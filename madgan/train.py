@@ -1,10 +1,10 @@
 from pathlib import Path
-from re import M
 from typing import Iterator, Tuple
+
 import pandas as pd
-import madgan
 import torch
 
+import madgan
 from madgan import constants
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -73,6 +73,9 @@ def train(
                                loss_fn=criterion_fn,
                                normal_label=constants.REAL_LABEL,
                                anomaly_label=constants.FAKE_LABEL)
+
+        generator.save(model_dir / f"generator_{epoch}.pt")
+        discriminator.save(model_dir / f"discriminator_{epoch}.pt")
 
 
 def _prepare_data(
