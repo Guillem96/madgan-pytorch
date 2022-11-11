@@ -63,6 +63,7 @@ def train_one_epoch(generator: nn.Module,
 
         # Update discriminator
         discriminator_optimizer.zero_grad()
+        discriminator.train()
         real_logits = discriminator(real)
         fake_logits = discriminator(fake.detach())
         d_logits = torch.cat([real_logits, fake_logits])
