@@ -142,6 +142,9 @@ def evaluate(generator: nn.Module,
     Returns:
         Dict[str, float]: Aggregated metrics.
     """
+    generator.eval()
+    discriminator.eval()
+
     agg_metrics: Dict[str, float] = {}
     for real, z in zip(real_dataloader, latent_dataloader):
         bs = real.size(0)
